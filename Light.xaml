@@ -1,0 +1,69 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ========== СВЕТЛА ТЕМА (Warm Slate & Indigo) ==========
+         Същите ключове като в Dark.xaml. -->
+
+    <!-- Повърхности -->
+    <SolidColorBrush x:Key="CanvasBrush"        Color="#F4F6F9" />
+    <SolidColorBrush x:Key="SurfaceBrush"       Color="#FFFFFF" />
+    <SolidColorBrush x:Key="SurfaceAltBrush"    Color="#F4F6F9" />
+    <SolidColorBrush x:Key="LineBrush"          Color="#E2E8F0" />
+    <SolidColorBrush x:Key="LineStrongBrush"    Color="#CBD5E1" />
+    <SolidColorBrush x:Key="HairlineBrush"      Color="#F1F5F9" />
+
+    <!-- Акцент -->
+    <SolidColorBrush x:Key="PrimaryBrush"       Color="#4F46E5" />
+    <SolidColorBrush x:Key="PrimaryHoverBrush"  Color="#4338CA" />
+    <SolidColorBrush x:Key="PrimarySoftBrush"   Color="#EEF2FF" />
+    <SolidColorBrush x:Key="PrimaryTextBrush"   Color="#4F46E5" />
+    <SolidColorBrush x:Key="OnAccentBrush"      Color="#FFFFFF" />
+
+    <!-- Успех -->
+    <SolidColorBrush x:Key="TealBrush"          Color="#0D9488" />
+    <SolidColorBrush x:Key="TealHoverBrush"     Color="#0F766E" />
+    <SolidColorBrush x:Key="TealTextBrush"      Color="#0F766E" />
+    <SolidColorBrush x:Key="FlashBrush"         Color="#CCFBF1" />
+
+    <!-- Грешка -->
+    <SolidColorBrush x:Key="DangerBrush"           Color="#DC2626" />
+    <SolidColorBrush x:Key="DangerSolidBrush"      Color="#DC2626" />
+    <SolidColorBrush x:Key="DangerSolidHoverBrush" Color="#B91C1C" />
+    <SolidColorBrush x:Key="DangerSoftBrush"       Color="#FEF2F2" />
+    <SolidColorBrush x:Key="DangerLineBrush"       Color="#FECACA" />
+
+    <!-- Текст -->
+    <SolidColorBrush x:Key="TextPrimaryBrush"   Color="#0F172A" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#475569" />
+    <SolidColorBrush x:Key="MutedBrush"         Color="#94A3B8" />
+    <SolidColorBrush x:Key="HeaderTextBrush"    Color="#64748B" />
+
+    <!-- Таблица, хапчета, скролбар -->
+    <SolidColorBrush x:Key="RowHoverBrush"         Color="#F8FAFC" />
+    <SolidColorBrush x:Key="RowSelectedBrush"      Color="#EEF2FF" />
+    <SolidColorBrush x:Key="PillBrush"             Color="#F1F5F9" />
+    <SolidColorBrush x:Key="PillHoverBrush"        Color="#E0E7FF" />
+    <SolidColorBrush x:Key="ScrollThumbBrush"      Color="#CBD5E1" />
+    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#94A3B8" />
+
+    <!-- Toast (тъмен „остров“ върху светлия фон) -->
+    <SolidColorBrush x:Key="ToastBrush"         Color="#0F172A" />
+    <SolidColorBrush x:Key="ToastBorderBrush"   Color="#0F172A" />
+    <SolidColorBrush x:Key="ToastTextBrush"     Color="#F8FAFC" />
+
+    <!-- Цветове на групите (фон / текст) -->
+    <SolidColorBrush x:Key="GroupFamilyBg"   Color="#DBEAFE" />
+    <SolidColorBrush x:Key="GroupFamilyFg"   Color="#1E40AF" />
+    <SolidColorBrush x:Key="GroupWorkBg"     Color="#FEF3C7" />
+    <SolidColorBrush x:Key="GroupWorkFg"     Color="#92400E" />
+    <SolidColorBrush x:Key="GroupFriendsBg"  Color="#DCFCE7" />
+    <SolidColorBrush x:Key="GroupFriendsFg"  Color="#166534" />
+    <SolidColorBrush x:Key="GroupOtherBg"    Color="#F1F5F9" />
+    <SolidColorBrush x:Key="GroupOtherFg"    Color="#334155" />
+
+    <DropShadowEffect x:Key="CardShadowEffect" BlurRadius="16" ShadowDepth="2" Direction="270"
+                      Opacity="0.06" Color="#0F172A" />
+    <DropShadowEffect x:Key="ToastShadowEffect" BlurRadius="20" ShadowDepth="6" Direction="270"
+                      Opacity="0.22" Color="#0F172A" />
+
+</ResourceDictionary>

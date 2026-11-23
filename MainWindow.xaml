@@ -1,0 +1,386 @@
+<Window x:Class="PhoneBook.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Телефонен указател" Height="720" Width="1200" MinHeight="600" MinWidth="1000"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource CanvasBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        FontFamily="Segoe UI" FontSize="13"
+        TextOptions.TextFormattingMode="Display" UseLayoutRounding="True">
+
+    <Window.Resources>
+        <!-- ===== Toast „Контактът е запазен!“: изплува (Y 12 → 0), стои 1.6 s и изчезва =====
+             Първите ключови кадри нямат KeyTime=0, затова при повторно пускане
+             анимацията продължава плавно от текущото състояние, без премигване. -->
+        <Storyboard x:Key="ToastStoryboard">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="toast" Storyboard.TargetProperty="Opacity">
+                <EasingDoubleKeyFrame KeyTime="0:0:0.18" Value="1" EasingFunction="{StaticResource HoverEase}" />
+                <LinearDoubleKeyFrame KeyTime="0:0:1.84" Value="1" />
+                <EasingDoubleKeyFrame KeyTime="0:0:2.10" Value="0">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <QuadraticEase EasingMode="EaseIn" />
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="toast"
+                                           Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)">
+                <EasingDoubleKeyFrame KeyTime="0:0:0.26" Value="0" EasingFunction="{StaticResource EnterEase}" />
+                <LinearDoubleKeyFrame KeyTime="0:0:1.84" Value="0" />
+                <EasingDoubleKeyFrame KeyTime="0:0:2.10" Value="8">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <CubicEase EasingMode="EaseIn" />
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+    </Window.Resources>
+
+    <!-- ===== Входна анимация: горна лента → лява карта → дясна карта (+0.08 s) → долна лента ===== -->
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="header" Storyboard.TargetProperty="Opacity"
+                                     To="1" Duration="0:0:0.26" EasingFunction="{StaticResource EnterEase}" />
+                    <DoubleAnimation Storyboard.TargetName="header"
+                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                     To="0" Duration="0:0:0.30" EasingFunction="{StaticResource EnterEase}" />
+
+                    <DoubleAnimation Storyboard.TargetName="leftCard" Storyboard.TargetProperty="Opacity"
+                                     BeginTime="0:0:0.06" To="1" Duration="0:0:0.30" EasingFunction="{StaticResource EnterEase}" />
+                    <DoubleAnimation Storyboard.TargetName="leftCard"
+                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                     BeginTime="0:0:0.06" To="0" Duration="0:0:0.35" EasingFunction="{StaticResource EnterEase}" />
+
+                    <DoubleAnimation Storyboard.TargetName="rightCard" Storyboard.TargetProperty="Opacity"
+                                     BeginTime="0:0:0.14" To="1" Duration="0:0:0.30" EasingFunction="{StaticResource EnterEase}" />
+                    <DoubleAnimation Storyboard.TargetName="rightCard"
+                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                     BeginTime="0:0:0.14" To="0" Duration="0:0:0.35" EasingFunction="{StaticResource EnterEase}" />
+
+                    <DoubleAnimation Storyboard.TargetName="footer" Storyboard.TargetProperty="Opacity"
+                                     BeginTime="0:0:0.22" To="1" Duration="0:0:0.26" EasingFunction="{StaticResource EnterEase}" />
+                    <DoubleAnimation Storyboard.TargetName="footer"
+                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                     BeginTime="0:0:0.22" To="0" Duration="0:0:0.30" EasingFunction="{StaticResource EnterEase}" />
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
+
+    <Grid>
+        <!-- shell = всичко видимо. От него се прави снимка при смяна на темата. -->
+        <Grid x:Name="shell" Background="{DynamicResource CanvasBrush}">
+            <Grid Margin="24,22,24,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- ================= ГОРНА ЛЕНТА ================= -->
+                <Grid x:Name="header" Grid.Row="0" Margin="0,0,0,20" Opacity="0">
+                    <Grid.RenderTransform>
+                        <TranslateTransform Y="-8" />
+                    </Grid.RenderTransform>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal">
+                        <!-- Векторна икона -->
+                        <Border Width="44" Height="44" CornerRadius="12" Background="{DynamicResource PrimaryBrush}">
+                            <Path Width="20" Height="20" Stretch="Uniform" Fill="{DynamicResource OnAccentBrush}"
+                                  Data="M12,12 A5,5 0 1 1 12,2 A5,5 0 1 1 12,12 Z M2,22 C2,17 6.5,14 12,14 C17.5,14 22,17 22,22 Z" />
+                        </Border>
+                        <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="Телефонен указател" FontSize="20" FontWeight="SemiBold" />
+                            <TextBlock Text="Контакти, групи и бърз достъп" FontSize="12"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                        </StackPanel>
+                        <!-- Брояч на контактите (подскача при промяна) -->
+                        <Border x:Name="countBadge" Margin="18,0,0,0" Padding="10,4" CornerRadius="12" VerticalAlignment="Center"
+                                Background="{DynamicResource PrimarySoftBrush}" RenderTransformOrigin="0.5,0.5">
+                            <TextBlock x:Name="txtCount" Text="0 контакта" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}" />
+                        </Border>
+                    </StackPanel>
+
+                    <TextBox x:Name="txtSearch" Grid.Column="2" Width="290" VerticalAlignment="Center"
+                             Style="{StaticResource SearchBox}" Tag="Търси по име, телефон или имейл…"
+                             TextChanged="TxtSearch_TextChanged" />
+                </Grid>
+
+                <!-- ================= СЪДЪРЖАНИЕ ================= -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="65*" />
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="35*" MinWidth="340" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- ЛЯВО: таблица с контакти -->
+                    <Grid x:Name="leftCard" Grid.Column="0" Opacity="0">
+                        <Grid.RenderTransform>
+                            <TranslateTransform Y="16" />
+                        </Grid.RenderTransform>
+                        <Border Style="{StaticResource CardShadow}" />
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Text="Контакти" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12" />
+
+                                <!-- Филтър по група -->
+                                <WrapPanel Grid.Row="1" Margin="0,0,0,10">
+                                    <RadioButton Style="{StaticResource FilterPill}" Content="Всички" IsChecked="True" Checked="Filter_Checked" />
+                                    <RadioButton Style="{StaticResource FilterPill}" Content="Семейство" Checked="Filter_Checked" />
+                                    <RadioButton Style="{StaticResource FilterPill}" Content="Работа" Checked="Filter_Checked" />
+                                    <RadioButton Style="{StaticResource FilterPill}" Content="Приятели" Checked="Filter_Checked" />
+                                    <RadioButton Style="{StaticResource FilterPill}" Content="Други" Checked="Filter_Checked" />
+                                </WrapPanel>
+
+                                <DataGrid x:Name="dgContacts" Grid.Row="2"
+                                          AutoGenerateColumns="False" IsReadOnly="True"
+                                          SelectionMode="Single" SelectionUnit="FullRow" CanUserAddRows="False"
+                                          SelectionChanged="DgContacts_SelectionChanged"
+                                          LoadingRow="DgContacts_LoadingRow">
+                                    <DataGrid.Columns>
+                                        <!-- Аватар с инициали + име -->
+                                        <DataGridTemplateColumn Header="КОНТАКТ" Width="2*" SortMemberPath="Name">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Width="32" Height="32" CornerRadius="16"
+                                                                Style="{StaticResource GroupTint}" Tag="{Binding GroupName}">
+                                                            <TextBlock Text="{Binding Initials}" FontSize="12" FontWeight="SemiBold"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Border>
+                                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="12,0,0,0"
+                                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <DataGridTextColumn Header="ТЕЛЕФОН" Binding="{Binding Phone}" Width="1.3*" />
+
+                                        <DataGridTextColumn Header="ИМЕЙЛ" Binding="{Binding Email}" Width="1.7*"
+                                                            ElementStyle="{StaticResource SecondaryCellText}" />
+
+                                        <!-- Цветно хапче за групата -->
+                                        <DataGridTemplateColumn Header="ГРУПА" Width="110" SortMemberPath="GroupName">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Border HorizontalAlignment="Left" CornerRadius="10" Padding="10,3"
+                                                            Style="{StaticResource GroupTint}" Tag="{Binding GroupName}">
+                                                        <TextBlock Text="{Binding GroupName}" FontSize="12" FontWeight="SemiBold" />
+                                                    </Border>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <!-- Празно състояние -->
+                                <StackPanel x:Name="emptyState" Grid.Row="2" Visibility="Collapsed" IsHitTestVisible="False"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="Няма намерени контакти" FontSize="15" FontWeight="SemiBold"
+                                               HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    <TextBlock Text="Сменете филтъра или добавете нов контакт." Margin="0,4,0,0"
+                                               HorizontalAlignment="Center" Foreground="{DynamicResource MutedBrush}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- ДЯСНО: редактор -->
+                    <Grid x:Name="rightCard" Grid.Column="2" Opacity="0">
+                        <Grid.RenderTransform>
+                            <TranslateTransform Y="16" />
+                        </Grid.RenderTransform>
+                        <Border Style="{StaticResource CardShadow}" />
+                        <Border Style="{StaticResource Card}" Padding="21">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <!-- Margin 3 оставя място за „пръстена“ около полето при фокус -->
+                                <StackPanel x:Name="editorContent" Margin="3">
+                                    <TextBlock x:Name="txtFormTitle" Text="Нов контакт" FontSize="16" FontWeight="SemiBold" />
+                                    <TextBlock x:Name="txtFormSubtitle" Text="Попълнете данните и натиснете „Добави контакт“."
+                                               FontSize="12" Margin="0,2,0,18" TextWrapping="Wrap"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+
+                                    <!-- Преглед на живо -->
+                                    <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="12" Padding="16" Margin="0,0,0,20">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border Width="56" Height="56" CornerRadius="28"
+                                                    Style="{StaticResource GroupTint}"
+                                                    Tag="{Binding SelectedItem, ElementName=cbGroup}">
+                                                <TextBlock FontSize="20" FontWeight="SemiBold"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           Text="{Binding Text, ElementName=txtName, Converter={StaticResource Initials}}" />
+                                            </Border>
+
+                                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="{Binding Text, ElementName=txtName}" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Text, ElementName=txtName}" Value="">
+                                                                    <Setter Property="Text" Value="Име на контакта" />
+                                                                    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <TextBlock Text="{Binding Text, ElementName=txtPhone}" Margin="0,2,0,6"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                                <Border HorizontalAlignment="Left" CornerRadius="10" Padding="10,3"
+                                                        Style="{StaticResource GroupTint}"
+                                                        Tag="{Binding SelectedItem, ElementName=cbGroup}">
+                                                    <TextBlock Text="{Binding SelectedItem, ElementName=cbGroup}" FontSize="12" FontWeight="SemiBold" />
+                                                </Border>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Полета -->
+                                    <TextBlock Style="{StaticResource FieldLabel}">Име <Run Text="*" Foreground="{DynamicResource DangerBrush}" /></TextBlock>
+                                    <TextBox x:Name="txtName" Margin="0,0,0,14" TextChanged="Field_TextChanged" />
+
+                                    <TextBlock Style="{StaticResource FieldLabel}">Телефон <Run Text="*" Foreground="{DynamicResource DangerBrush}" /></TextBlock>
+                                    <TextBox x:Name="txtPhone" Margin="0,0,0,14" TextChanged="Field_TextChanged" />
+
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="Имейл" />
+                                    <TextBox x:Name="txtEmail" Margin="0,0,0,14" TextChanged="Field_TextChanged" />
+
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="Група" />
+                                    <ComboBox x:Name="cbGroup" Margin="0,0,0,16">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Ellipse Margin="0,0,8,0" Style="{StaticResource GroupDot}" Tag="{Binding}" />
+                                                    <TextBlock Text="{Binding}" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+
+                                    <!-- Съобщение за грешка (вместо MessageBox) – появява се плавно -->
+                                    <Border x:Name="errorBanner" Visibility="Collapsed" Margin="0,0,0,16" Padding="12,10" CornerRadius="8"
+                                            Background="{DynamicResource DangerSoftBrush}" BorderBrush="{DynamicResource DangerLineBrush}" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Width="18" Height="18" CornerRadius="9" VerticalAlignment="Top"
+                                                    Background="{DynamicResource DangerSolidBrush}">
+                                                <TextBlock Text="!" Foreground="{DynamicResource OnAccentBrush}" FontWeight="Bold" FontSize="12"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                            <TextBlock x:Name="txtError" Grid.Column="1" Margin="10,0,0,0" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource DangerBrush}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Бутони -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button x:Name="btnSave" Content="Добави контакт" Click="BtnSave_Click" />
+                                        <Button Grid.Column="1" Content="Нов" Margin="8,0,0,0"
+                                                Style="{StaticResource GhostButton}" Click="BtnNew_Click" />
+                                        <!-- MinWidth пази ширината еднаква за „Изтрий“ и „Потвърди“ -->
+                                        <Button x:Name="btnDelete" Grid.Column="2" Content="Изтрий" Margin="8,0,0,0" MinWidth="96"
+                                                IsEnabled="False" Style="{StaticResource DangerButton}" Click="BtnDelete_Click" />
+                                    </Grid>
+
+                                    <TextBlock Text="Съвет: щракнете върху ред в таблицата, за да го редактирате."
+                                               Margin="0,16,0,0" FontSize="11" TextWrapping="Wrap"
+                                               Foreground="{DynamicResource MutedBrush}" />
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- ================= ДОЛНА ЛЕНТА: смяна на темата ================= -->
+                <Grid x:Name="footer" Grid.Row="2" Margin="0,14,0,0" Opacity="0">
+                    <Grid.RenderTransform>
+                        <TranslateTransform Y="8" />
+                    </Grid.RenderTransform>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="btnTheme" Style="{StaticResource ThemeToggleButton}" Click="BtnTheme_Click">
+                            <Grid Width="18" Height="18">
+                                <!-- Слънце -->
+                                <Viewbox x:Name="sunIcon" Opacity="0">
+                                    <Canvas Width="24" Height="24">
+                                        <Ellipse Canvas.Left="7.5" Canvas.Top="7.5" Width="9" Height="9" Fill="#F59E0B" />
+                                        <Path Stroke="#F59E0B" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                              Data="M12,1.5 L12,3.5 M12,20.5 L12,22.5 M1.5,12 L3.5,12 M20.5,12 L22.5,12 M4.6,4.6 L6,6 M18,18 L19.4,19.4 M4.6,19.4 L6,18 M18,6 L19.4,4.6" />
+                                    </Canvas>
+                                </Viewbox>
+                                <!-- Луна -->
+                                <Viewbox x:Name="moonIcon">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Fill="#C7D2FE" Data="M21,12.79 A9,9 0 1 1 11.21,3 A7,7 0 0 0 21,12.79 Z" />
+                                    </Canvas>
+                                </Viewbox>
+                            </Grid>
+                        </Button>
+                        <TextBlock x:Name="txtThemeLabel" Text="Тъмна тема" Margin="10,0,0,0" VerticalAlignment="Center"
+                                   FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    </StackPanel>
+
+                    <TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="11"
+                               Foreground="{DynamicResource MutedBrush}"
+                               Text="Данните се пазят локално в contacts.db" />
+                </Grid>
+            </Grid>
+
+            <!-- ================= TOAST ================= -->
+            <Border x:Name="toast" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,16"
+                    Padding="10,8,16,8" CornerRadius="20" Opacity="0" IsHitTestVisible="False"
+                    Background="{DynamicResource ToastBrush}" BorderBrush="{DynamicResource ToastBorderBrush}" BorderThickness="1"
+                    Effect="{DynamicResource ToastShadowEffect}">
+                <Border.RenderTransform>
+                    <TranslateTransform Y="12" />
+                </Border.RenderTransform>
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="20" Height="20" CornerRadius="10" Background="{DynamicResource TealBrush}">
+                        <Path Data="M0,4 L3,7 L9,0" Stroke="White" StrokeThickness="1.8"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock x:Name="txtToast" Margin="10,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold"
+                               Foreground="{DynamicResource ToastTextBrush}" Text="Контактът е запазен!" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Снимка на старата тема по време на кръговото разкриване -->
+        <Image x:Name="themeOverlay" Visibility="Collapsed" IsHitTestVisible="False" Stretch="Fill" />
+    </Grid>
+</Window>
